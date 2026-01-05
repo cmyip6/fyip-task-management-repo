@@ -115,7 +115,8 @@ describe('E2E Test Runner', () => {
   });
 
   for (const [className, suite] of TestSuitesStorage) {
-    if (SUITETORUN && suite.title !== SUITETORUN) continue;
+    // if (SUITETORUN && suite.title !== SUITETORUN) continue;
+    console.log('Running Suite:', suite.title);
     const logger = new Logger(className);
 
     describe(suite.title, () => {

@@ -1,5 +1,6 @@
 import { EntityTypeOptions } from '@libs/data/type/entity-type.enum';
 import { PermissionLevelOptions } from '@libs/data/type/permission-level.enum';
+import { UserTypeOptions } from '../../../libs/data/type/user-type.enum';
 
 export type PolicyHandlerType = {
   entityType: EntityTypeOptions;
@@ -45,10 +46,6 @@ export class PoliciesExecutor {
     { optional = false }: PolicyHandlerOptions = {},
   ): PolicyHandlerType {
     return this.can(PermissionLevelOptions.DELETE, path, optional);
-  }
-
-  public SuperUser(): PolicyHandlerType {
-    return this.can(PermissionLevelOptions.SUPER_USER);
   }
 
   private can(

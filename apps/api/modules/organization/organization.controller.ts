@@ -59,7 +59,6 @@ export class OrganizationController {
     entityType: EntityTypeOptions.ORGANIZATION,
   })
   @CheckPolicies(
-    new PoliciesExecutor().SuperUser(),
     new PoliciesExecutor().Create('body.parentOrganizationId', {
       optional: true,
     }),

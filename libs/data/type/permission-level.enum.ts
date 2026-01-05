@@ -3,5 +3,4 @@ export enum PermissionLevelOptions {
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
-  SUPER_USER = 'super_user',
 }
