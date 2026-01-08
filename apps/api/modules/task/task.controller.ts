@@ -29,7 +29,7 @@ import { CreateTaskDto } from '@api/dto/create-task.dto';
 import { EntityTypeOptions } from '@libs/data/type/entity-type.enum';
 import { PoliciesExecutor } from '@api/policies/task.policy';
 import { CreateTaskResponseDto } from '@api/dto/create-task-response.dto';
-import { DeleteResult } from 'typeorm';
+import { DeleteResult, UpdateResult } from 'typeorm';
 import { UpdateTaskDto } from '@api/dto/update-task.dto';
 import { Audit } from '../../decorator/audit-log.decorator';
 import { Transactional } from 'typeorm-transactional';
@@ -117,7 +117,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Body() dto: UpdateTaskDto,
     @User() user: AuthUserInterface,
-  ): Promise<DeleteResult> {
+  ): Promise<UpdateResult> {
     return this.service.updateOne(taskId, dto, user);
   }
 

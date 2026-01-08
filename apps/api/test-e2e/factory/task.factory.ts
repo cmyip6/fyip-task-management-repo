@@ -13,4 +13,11 @@ export class TaskFactory {
       organizationId,
     };
   }
+
+  updateFakeTaskDto(): Partial<CreateTaskDto> {
+    return {
+      title: faker.company.name(),
+      description: faker.lorem.sentence(),
+    };
+  }
 }

@@ -90,12 +90,14 @@ export class RoleService {
     }
 
     const currentPermissionSet = new Set(
-      roleDb.permissions.map((p) => p.permission),
+      roleDb.permissions.map((p) => `${p.entityType}-${p.permission}`),
     );
 
     if (dto.permissions?.insert?.length) {
       const newPermissions = dto.permissions.insert
-        .filter((p) => !currentPermissionSet.has(p.permission)) // Only add if not exists
+        .filter(
+          (p) => !currentPermissionSet.has(`${p.entityType}-${p.permission}`),
+        ) // Only add if not exists
         .map((p) =>
           this.repoPermission.create({
             permission: p.permission,

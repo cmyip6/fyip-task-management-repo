@@ -8,8 +8,7 @@ import {
 } from '@nestjs/common';
 import { BaseTest } from './base-test';
 import { UserSuite } from './user.suite';
-import { CreateTaskDto } from '@api/dto/create-task.dto';
-import { RoleFactory, TaskFactory } from '../factory';
+import { PermissionFactory, RoleFactory, TaskFactory } from '../factory';
 import { TaskStatusOptions } from '@libs/data/type/task-status.enum';
 import { EntityTypeOptions } from '@libs/data/type/entity-type.enum';
 import { PermissionLevelOptions } from '@libs/data/type/permission-level.enum';
@@ -21,6 +20,7 @@ export class TaskSuite extends BaseTest implements OnModuleInit {
 
   @Inject(TaskFactory) taskFactory: TaskFactory;
   @Inject(RoleFactory) roleFactory: RoleFactory;
+  @Inject(PermissionFactory) permissionFactory: PermissionFactory;
 
   constructor(@Inject(UserSuite) private readonly userSuite: UserSuite) {
     super();
@@ -43,24 +43,17 @@ export class TaskSuite extends BaseTest implements OnModuleInit {
     this.logger.debug('Assigning permission to role');
     const updateRoleDto = this.roleFactory.updateRolePermissionDto(
       organization.id,
-      [
-        {
-          entityType: EntityTypeOptions.ORGANIZATION,
-          permission: PermissionLevelOptions.CREATE,
-        },
-        {
-          entityType: EntityTypeOptions.ORGANIZATION,
-          permission: PermissionLevelOptions.READ,
-        },
-        {
-          entityType: EntityTypeOptions.ORGANIZATION,
-          permission: PermissionLevelOptions.UPDATE,
-        },
-        {
-          entityType: EntityTypeOptions.ORGANIZATION,
-          permission: PermissionLevelOptions.DELETE,
-        },
-      ],
+      {
+        insert: this.permissionFactory.GetPermissionDtos([
+          {
+            entityType: EntityTypeOptions.ORGANIZATION,
+            permissions: [
+              PermissionLevelOptions.UPDATE,
+              PermissionLevelOptions.READ,
+            ],
+          },
+        ]),
+      },
     );
     const { body: updateResponse } = await this.patch(
       `/role/${role.id}/permission`,

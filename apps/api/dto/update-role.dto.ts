@@ -13,7 +13,7 @@ import { PropertyLength } from '../../../libs/data/const/length.const';
 import { EntityTypeOptions } from '../../../libs/data/type/entity-type.enum';
 import { Type } from 'class-transformer';
 
-class PermissionDto {
+export class PermissionDto {
   @IsEnum(PermissionLevelOptions)
   permission: PermissionLevelOptions;
 

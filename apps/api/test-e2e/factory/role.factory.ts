@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRoleDto } from '../../dto/create-role.dto';
 import { faker } from '@faker-js/faker';
 import { UserRoleOptions } from '@libs/data/type/user-role.enum';
-import { UpdateRoleDto } from '@api/dto/update-role.dto';
+import { PermissionDto, UpdateRoleDto } from '@api/dto/update-role.dto';
 import { PermissionLevelOptions } from '@libs/data/type/permission-level.enum';
 import { EntityTypeOptions } from '@libs/data/type/entity-type.enum';
 @Injectable()
@@ -23,14 +23,12 @@ export class RoleFactory {
   updateRolePermissionDto(
     organizationId: number,
     permissions: {
-      entityType: EntityTypeOptions;
-      permission: PermissionLevelOptions;
-    }[],
+      insert?: PermissionDto[];
+      delete?: PermissionDto[];
+    },
   ): UpdateRoleDto {
     return {
-      permissions: {
-        insert: permissions,
-      },
+      permissions,
       organizationId,
     };
   }
