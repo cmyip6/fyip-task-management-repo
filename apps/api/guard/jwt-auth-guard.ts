@@ -12,6 +12,7 @@ import {
   ThrowSilentResponse,
 } from '@api/helper/throw-log-out-response';
 import { Request, Response } from 'express';
+import { cookieConfig } from '@api/configs/cookie.config';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -41,12 +42,7 @@ export class JwtAuthGuard implements CanActivate {
       shouldThrowError = true;
     }
 
-    response.clearCookie('token', {
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
+    response.clearCookie('token', cookieConfig);
 
     if (shouldThrowError) {
       ThrowLogoutResponse('Session expired, please login again.');
