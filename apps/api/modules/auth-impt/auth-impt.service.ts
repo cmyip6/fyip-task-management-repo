@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, In } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { UserEntity } from '@api/models/users.entity';
 import { TaskEntity } from '@api/models/tasks.entity';
@@ -87,6 +88,20 @@ export class AuthImptService {
           permission,
         });
       }
+      case EntityTypeOptions.ROLE: {
+        const foundRole = userRoles.find((el) => el.id === entityId);
+
+        if (!foundRole) {
+          this.logger.verbose('Role not found.');
+          return false;
+        }
+
+        return await permissionRepo.existsBy({
+          roleId: foundRole.id,
+          entityType, // fixed on 28/11
+          permission,
+        });
+      }
       default:
         break;
     }
@@ -97,13 +112,30 @@ export class AuthImptService {
     return false;
   }
 
-  async isUserValid(userId: string): Promise<boolean> {
+  async isUserValid(userId: string, token: string): Promise<boolean> {
     const userRepo = this.dataSource.getRepository(UserEntity);
     const foundUser = await userRepo.findOne({
       where: { id: userId },
       relations: { roles: true },
     });
-    return foundUser && !!foundUser.roles?.length;
+
+    if (!userId || !foundUser) {
+      this.logger.warn('User is not valid');
+      return false;
+    }
+
+    if (!foundUser.token) {
+      this.logger.warn('User has no session');
+      return false;
+    }
+
+    const tokenIsValid = await bcrypt.compare(token, foundUser.token);
+    return (
+      foundUser &&
+      (!!foundUser.roles?.length ||
+        foundUser.userType === UserTypeOptions.SUPER_USER) &&
+      tokenIsValid
+    );
   }
 
   async isRoleValid(
@@ -112,9 +144,19 @@ export class AuthImptService {
     roles: UserRoleOptions[],
   ): Promise<boolean> {
     const userRepo = this.dataSource.getRepository(UserEntity);
-    return await userRepo.existsBy({
+    const roleExist = await userRepo.existsBy({
       id: userId,
       roles: { name: In(roles), organizationId },
+    });
+
+    return roleExist;
+  }
+
+  async isSuperUser(userId: string): Promise<boolean> {
+    const userRepo = this.dataSource.getRepository(UserEntity);
+    return await userRepo.existsBy({
+      id: userId,
+      userType: UserTypeOptions.SUPER_USER,
     });
   }
 }

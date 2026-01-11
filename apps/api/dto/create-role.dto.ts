@@ -1,6 +1,6 @@
 import { PropertyLength } from '@libs/data/const/length.const';
-import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsValidOrganization } from '../validator/organization-exist.validator';
 
 export class CreateRoleDto {
   @IsString()
@@ -12,8 +12,7 @@ export class CreateRoleDto {
   @MaxLength(PropertyLength.DESCRIPTION)
   description?: string;
 
-  @IsOptional()
-  @Type(() => Number)
   @IsInt()
-  organizationId?: number;
+  @IsValidOrganization({ message: 'Organization id is invalid' })
+  organizationId: number;
 }

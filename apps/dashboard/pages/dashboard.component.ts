@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   OnDestroy,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +21,9 @@ import { TaskCardComponent } from '../components/task-card.component';
 import { TopBarComponent } from '../components/topBar/top-bar.component';
 import { ConfirmationModalComponent } from '../components/modals/confirmation-modal.component';
 import { GetTaskResponseInterface } from '@libs/data/type/get-task-response.interface';
+import { OrganizationApiService } from '../api-services/organization-api.service';
+import { Router } from '@angular/router';
+import { UserApiService } from '../api-services/user-api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -40,7 +44,7 @@ import { GetTaskResponseInterface } from '@libs/data/type/get-task-response.inte
         class="fixed inset-0 opacity-5 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"
       ></div>
 
-      <app-top-bar></app-top-bar>
+      <app-top-bar/>
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <!-- Dashboard Header -->
@@ -404,8 +408,11 @@ import { GetTaskResponseInterface } from '@libs/data/type/get-task-response.inte
     `,
   ],
 })
-export class DashboardComponent implements OnDestroy {
+export class DashboardComponent implements OnDestroy, OnInit {
   private api = inject(TaskApiService);
+  private orgApi = inject(OrganizationApiService);
+  private userApi = inject(UserApiService);
+  private router = inject(Router);
   session = inject(SessionService);
 
   tasks = signal<GetTaskResponseInterface[]>([]);
@@ -450,6 +457,27 @@ export class DashboardComponent implements OnDestroy {
         this.tasks.set([]);
       }
     });
+  }
+
+  ngOnInit() {
+    if (this.session.organizations().length === 0) {
+      this.orgApi.getOrganizations().subscribe({
+        next: (orgs) => {
+          if (orgs.length > 0) {
+            this.session.setOrganizations(orgs);
+            this.session.selectOrganization(orgs[0].id);
+          }
+        },
+        error: () => this.router.navigate(['/']),
+      });
+    }
+
+    if (this.session.user() == null) {
+      this.userApi.getCurrentUser().subscribe({
+        next: (user) => this.session.setUser(user),
+        error: () => this.router.navigate(['/']),
+      });
+    }
   }
 
   ngOnDestroy() {
@@ -544,12 +572,11 @@ export class DashboardComponent implements OnDestroy {
     }
   }
 
-  // New drop event handler
   drop(event: CdkDragDrop<GetTaskResponseInterface[]>) {
     if (event.previousIndex === event.currentIndex) return;
 
     const currentTasks = [...this.tasks()];
-    // Optimistic UI update
+
     moveItemInArray(currentTasks, event.previousIndex, event.currentIndex);
     this.tasks.set(currentTasks);
 

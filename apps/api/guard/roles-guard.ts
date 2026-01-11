@@ -18,6 +18,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { EntityTypeOptions } from '@libs/data/type/entity-type.enum';
 import { TaskEntity } from '@api/models/tasks.entity';
+import { RoleEntity } from '@api/models/roles.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -39,8 +40,21 @@ export class RolesGuard implements CanActivate {
     }
     const { user } = request;
 
-    if (!user) return false;
-    if (!user.roles.length) return false;
+    if (!user) {
+      this.logger.error(
+        'User is not in request. Unable to verify roles, access denied.',
+      );
+      return false;
+    }
+
+    const isSuperUser = await this.authorizationImplService.isSuperUser(
+      user.id,
+    );
+
+    if (isSuperUser) {
+      this.logger.debug('User is a superuser, access granted.');
+      return true;
+    }
 
     const { path, roles, entityType } = handler;
     const entityId = getEntityValue(request, path);
@@ -57,6 +71,15 @@ export class RolesGuard implements CanActivate {
           .findOneBy({ id: entityId });
         if (!taskDb) return false;
         organizationId = taskDb.organizationId;
+        break;
+      }
+      case EntityTypeOptions.ROLE: {
+        const roleDB = await this.dataSource
+          .getRepository(RoleEntity)
+          .findOneBy({ id: entityId });
+        if (!roleDB) return false;
+        organizationId = roleDB.organizationId;
+        break;
       }
       default:
         break;

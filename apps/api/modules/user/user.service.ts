@@ -13,7 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationService } from '../organization/organization.service';
 import { RoleService } from '../role/role.service';
 import { GetUserReponseDto } from '@api/dto/get-user-response.dto';
-import { CreateUserDto } from '@api/dto/create-user.dto';
+import { CreateUserDto, CreateUserResponseDto } from '@api/dto/create-user.dto';
 import { AuthUserDto } from '@api/dto/auth-user.dto';
 import { RefreshTokenDto } from '@api/dto/refresh-token.dto';
 import { UserEntity } from '@api/models/users.entity';
@@ -40,26 +40,17 @@ export class UserService {
   }
 
   @Transactional()
-  async createUser(dto: CreateUserDto): Promise<GetUserReponseDto> {
+  async createUser(
+    dto: CreateUserDto,
+    creatorId: string,
+  ): Promise<CreateUserResponseDto> {
     this.logger.debug(`Creating user ${dto.name}`);
     let organizationId = null;
-    let roleId = null;
-
-    if (dto?.organizationId) {
-      const orgDb = await this.orgnaizationService.findOneById(
-        dto.organizationId,
-      );
-      if (!orgDb) {
-        throw new NotFoundException(
-          'Organization is not found' + dto.organizationId,
-        );
-      }
-      organizationId = orgDb.id;
-    }
+    const roles = [];
 
     if (dto?.roleId) {
       const roleDb = await this.roleService.findOneById(dto.roleId);
-      roleId = roleDb.id;
+      roles.push(roleDb);
     }
 
     if (await this.repoUser.existsBy({ username: dto.username })) {
@@ -72,11 +63,13 @@ export class UserService {
       passwordHash,
       email: dto.email,
       name: dto.name,
-      organizationId,
-      roleId,
+      organization: { id: organizationId },
+      roles,
+      createdBy: creatorId,
+      updatedBy: creatorId,
     });
 
-    return plainToInstance(GetUserReponseDto, ret);
+    return plainToInstance(CreateUserResponseDto, ret);
   }
 
   async getUserById(
@@ -105,5 +98,9 @@ export class UserService {
     // delete relational entities
 
     return await this.repoUser.delete(userId);
+  }
+
+  existsByField(field: string, value: string): Promise<boolean> {
+    return this.repoUser.existsBy({ [field]: value });
   }
 }

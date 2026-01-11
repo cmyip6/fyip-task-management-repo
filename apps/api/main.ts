@@ -11,19 +11,23 @@ import {
   getDataSourceByName,
   initializeTransactionalContext,
 } from 'typeorm-transactional';
-import { TaskManagementModule } from './task-management.module';
 import { CONNECTION_NAME } from './database/dbconfig';
 import { TypeORMMigrations } from './helper/typeorm-migration';
+import { AppModule } from './modules/app/app.module';
+import { useContainer } from 'class-validator';
 
 const DROP_SCHEMA = process.env['DROP_SCHEMA'] === 'true';
 const RUN_MIGRATIONS = process.env['RUN_MIGRATIONS'] === 'true';
 const RUN_SEEDS = process.env['RUN_SEEDS'] === 'true';
+const port = process.env.API_PORT || 4200;
+const host = process.env.API_HOST || 'localhost';
+const protocol = process.env.API_PROTOCOL || 'http';
 
+const cookieParser = require('cookie-parser');
 async function bootstrap(): Promise<void> {
   initializeTransactionalContext();
 
-  const app =
-    await NestFactory.create<NestExpressApplication>(TaskManagementModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const dataSource = getDataSourceByName(CONNECTION_NAME);
   if (!dataSource) {
@@ -31,15 +35,21 @@ async function bootstrap(): Promise<void> {
   }
 
   const migration = new TypeORMMigrations(dataSource);
-
+  const url = `${protocol}://${host}:${port}`;
   await migration.run(
     DROP_SCHEMA,
     RUN_MIGRATIONS,
     RUN_SEEDS,
     Object.values(seeders),
   );
-
-  app.enableCors();
+  useContainer(app.select(AppModule), {
+    fallbackOnErrors: true,
+  });
+  app.use(cookieParser());
+  app.enableCors({
+    origin: ['http://localhost:4200' /* for development */, url],
+    credentials: true,
+  });
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
@@ -51,12 +61,9 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const port = process.env.API_PORT || 4200;
-  const host = process.env.API_HOST || 'localhost';
-  const protocol = process.env.API_PROTOCOL || 'http';
   await app.listen(port);
 
-  Logger.log(`Application is running on: ${protocol}://${host}:${port}/api`);
+  Logger.log(`Application is running on: ${url}/api`);
 }
 
 bootstrap();

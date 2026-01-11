@@ -1,10 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -12,6 +11,8 @@ import {
 } from 'class-validator';
 import { PropertyLength } from '@libs/data/const/length.const';
 import { PASSWORD_REGEX } from '../helper/password.regex';
+import { IsValidRole } from '../validator/role-exist.validator';
+import { IsUserFieldUnique } from '../validator/user-field-unique.validator';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'User Password', type: String })
@@ -29,11 +30,17 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   @Type(() => String)
+  @IsUserFieldUnique({
+    message: 'Username has been taken, please select another one',
+  })
   username: string;
 
   @ApiProperty({ description: 'User email', type: String })
   @IsNotEmpty()
   @IsEmail()
+  @IsUserFieldUnique({
+    message: 'Email has been registered trying logging in.',
+  })
   email: string;
 
   @ApiProperty({
@@ -45,19 +52,17 @@ export class CreateUserDto {
   @IsString()
   name: string;
 
-  @ApiProperty({
-    description: 'Role id',
-    type: Number,
-  })
   @IsNumber()
-  @IsOptional()
-  roleId?: number;
+  @IsValidRole({ message: 'Role does not exist in the database' })
+  roleId: number;
+}
 
-  @ApiProperty({
-    description: 'Organization id',
-    type: Number,
-  })
+export class CreateUserResponseDto extends PickType(CreateUserDto, [
+  'email',
+  'name',
+  'username',
+  'roleId',
+]) {
   @IsNumber()
-  @IsOptional()
-  organizationId?: number;
+  id: number;
 }
