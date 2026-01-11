@@ -1,11 +1,8 @@
-# TaskManagement
-
-Thank you so much for taking the time to review my project! Please follow the instructions below to set up the testing environment.
-
+# Task Management
 # Branch
 
 1. main ( Submitted version )
-2. develop ( Implemented features: Improved jwt token handling with HttpRequest only cookies, e2e-testing, audit logging, subscriber, improved class validation )
+2. Update: ( Implemented features: Improved jwt token handling with HttpRequest only cookies, e2e-testing, audit logging, subscriber, improved class validation )
 
 # Prerequisites
 
