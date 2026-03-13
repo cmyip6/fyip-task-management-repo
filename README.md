@@ -1,7 +1,7 @@
 # Task Management
 # Branch
 
-1. main ( Submitted version )
+1. main, dev
 2. Update: ( Implemented features: Improved jwt token handling with HttpRequest only cookies, e2e-testing, audit logging, subscriber, improved class validation )
 
 # Prerequisites
